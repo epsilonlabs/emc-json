@@ -159,20 +159,20 @@ public class JsonModel extends CachedModel<Object>{
 	}
 
 	@Override
-	protected Collection<? extends JSONObject> allContentsFromModel() {
+	protected Collection<Object> allContentsFromModel() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected Collection<? extends JSONObject> getAllOfTypeFromModel(String type)
+	protected Collection<Object> getAllOfTypeFromModel(String type)
 			throws EolModelElementTypeNotFoundException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected Collection<? extends JSONObject> getAllOfKindFromModel(String kind)
+	protected Collection<Object> getAllOfKindFromModel(String kind)
 			throws EolModelElementTypeNotFoundException {
 		return getAllOfTypeFromModel(kind);
 	}
