@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.Collection;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -30,12 +29,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
-public class JsonModel extends CachedModel<Object>{
+public class JsonModel extends CachedModel<Object> {
 
-	public static String PROPERTY_FILE = "file";
-	public static String PROPERTY_URI = "uri";
-	public static String PROPERTY_USERNAME = "username";
-	public static String PROPERTY_PASSWORD = "password";
+	public static final String PROPERTY_FILE = "file";
+	public static final String PROPERTY_URI = "uri";
+	public static final String PROPERTY_USERNAME = "username";
+	public static final String PROPERTY_PASSWORD = "password";
 	
 	protected File file;
 	protected String uri;
@@ -269,4 +268,7 @@ public class JsonModel extends CachedModel<Object>{
 		return Arrays.asList(instance.getClass().getSimpleName());
 	}
 	
+	public boolean isLoaded() {
+		return root != null;
+	}
 }
