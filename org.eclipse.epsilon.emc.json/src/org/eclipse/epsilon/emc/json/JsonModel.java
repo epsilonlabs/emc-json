@@ -16,13 +16,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.eclipse.epsilon.common.util.FileUtil;
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.emc.plainxml.PlainXmlModel;
-import org.eclipse.epsilon.eol.EolModule;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
 import org.eclipse.epsilon.eol.exceptions.models.EolEnumerationValueNotFoundException;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelElementTypeNotFoundException;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.exceptions.models.EolNotInstantiableModelElementTypeException;
-import org.eclipse.epsilon.eol.execute.introspection.IPropertyGetter;
 import org.eclipse.epsilon.eol.models.CachedModel;
 import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 import org.json.simple.JSONArray;
@@ -40,18 +38,10 @@ public class JsonModel extends CachedModel<Object> {
 	protected String uri;
 	protected String username;
 	protected String password;
-	protected Object root = null;
+	protected Object root;
 	
-	public static void main(String[] args) throws Exception {
-		JsonModel model = new JsonModel();
-		model.setName("M");
-		model.setFile(new File("commits.json"));
-		model.load();
-		
-		EolModule module = new EolModule();
-		module.getContext().getModelRepository().addModel(model);
-		module.parse("M.root[0].e_commit.e_author.a_name.println();");
-		module.execute();		
+	public JsonModel() {
+		propertyGetter = new JsonPropertyGetter();
 	}
 	
 	public Object getRoot() {
@@ -242,14 +232,6 @@ public class JsonModel extends CachedModel<Object> {
 	protected void disposeModel() {
 		root = null;
 	}
-
-	protected JsonPropertyGetter propertyGetter = new JsonPropertyGetter();
-	
-	@Override
-	public IPropertyGetter getPropertyGetter() {
-		return propertyGetter;
-	}
-	
 	
 	@Override
 	protected boolean deleteElementInModel(Object instance)

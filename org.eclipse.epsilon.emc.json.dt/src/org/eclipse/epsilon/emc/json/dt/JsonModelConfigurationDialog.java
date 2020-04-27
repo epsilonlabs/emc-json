@@ -23,10 +23,12 @@ import org.eclipse.swt.widgets.Text;
 
 public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurationDialog {
 	
+	@Override
 	protected String getModelName() {
 		return "JSON Document";
 	}
 
+	@Override
 	protected String getModelType() {
 		return "JSON";
 	}
@@ -38,6 +40,7 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 	protected Button browseModelFile;
 	protected Button filebasedButton;
 	
+	@Override
 	protected void createGroups(Composite control) {
 		super.createGroups(control);
 		createFilesGroup(control);
@@ -75,6 +78,7 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 		filebasedButton.addListener(SWT.Selection, new Listener() {
 
 			
+			@Override
 			public void handleEvent(Event event) {
 				toggleEnabledFields();
 			}
@@ -107,7 +111,8 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 
 	
 	
-	protected void loadProperties(){
+	@Override
+	protected void loadProperties() {
 		super.loadProperties();
 		if (properties == null) return;
 		fileText.setText(properties.getProperty(JsonModel.PROPERTY_FILE));
@@ -117,7 +122,8 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 	}
 	
 	
-	protected void storeProperties(){
+	@Override
+	protected void storeProperties() {
 		super.storeProperties();
 		properties.put(JsonModel.PROPERTY_URI, uriText.getText());
 		properties.put(JsonModel.PROPERTY_FILE, fileText.getText());
