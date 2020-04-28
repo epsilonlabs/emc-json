@@ -1,7 +1,9 @@
 package org.eclipse.epsilon.emc.json;
 
+import org.eclipse.epsilon.common.module.ModuleElement;
 import org.eclipse.epsilon.emc.plainxml.PlainXmlProperty;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
+import org.eclipse.epsilon.eol.execute.context.IEolContext;
 import org.eclipse.epsilon.eol.execute.introspection.java.JavaPropertyGetter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -9,8 +11,7 @@ import org.json.simple.JSONObject;
 public class JsonPropertyGetter extends JavaPropertyGetter {
 	
 	@Override
-	public Object invoke(Object object, String property)
-			throws EolRuntimeException {
+	public Object invoke(Object object, String property, ModuleElement ast, IEolContext context) throws EolRuntimeException {
 		
 		JSONObject jsonObject = (JSONObject) object;
 		
@@ -34,7 +35,7 @@ public class JsonPropertyGetter extends JavaPropertyGetter {
 			}
 		}
 		
-		return super.invoke(object, property);
+		return super.invoke(object, property, ast, context);
 	}
 	
 }
