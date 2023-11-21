@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 The University of York.
+ * Copyright (c) 2012-2023 The University of York.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  * 
  * Contributors:
  *     Dimitrios Kolovos - initial API and implementation
+ *     Sina Madani - adaptation to JSON
+ *     Antonio Garcia-Dominguez - minor refinements
  ******************************************************************************/
 package org.eclipse.epsilon.emc.json.dt;
 
@@ -22,7 +24,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurationDialog {
-	
+
 	@Override
 	protected String getModelName() {
 		return "JSON Document";
@@ -76,15 +78,11 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 		filebasedButton.setText("Workspace file");
 		filebasedButton.setLayoutData(filebasedButtonGridData);
 		filebasedButton.addListener(SWT.Selection, new Listener() {
-
-			
 			@Override
 			public void handleEvent(Event event) {
 				toggleEnabledFields();
 			}
-			
 		});
-		
 		
 		fileTextLabel = new Label(groupContent, SWT.NONE);
 		fileTextLabel.setText("File: ");
@@ -109,8 +107,6 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 		return groupContent;
 	}
 
-	
-	
 	@Override
 	protected void loadProperties() {
 		super.loadProperties();
@@ -120,7 +116,6 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 		filebasedButton.setSelection(properties.getBooleanProperty("fileBased", true));
 		toggleEnabledFields();
 	}
-	
 	
 	@Override
 	protected void storeProperties() {
