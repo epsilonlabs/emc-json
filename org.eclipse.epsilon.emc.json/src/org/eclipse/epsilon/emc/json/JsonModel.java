@@ -17,8 +17,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -38,8 +42,6 @@ import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.exceptions.models.EolNotInstantiableModelElementTypeException;
 import org.eclipse.epsilon.eol.models.CachedModel;
 import org.eclipse.epsilon.eol.models.IRelativePathResolver;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 public class JsonModel extends CachedModel<Object> {
@@ -55,7 +57,8 @@ public class JsonModel extends CachedModel<Object> {
 	protected String username;
 	protected String password;
 
-	protected Object root;
+	/* ONLY SET THIS FIELD VIA setRoot() */
+	protected Object _root;
 
 	public JsonModel() {
 		propertyGetter = new JsonPropertyGetter();
@@ -63,11 +66,15 @@ public class JsonModel extends CachedModel<Object> {
 	}
 
 	public Object getRoot() {
-		return root;
+		return _root;
 	}
 
 	public void setRoot(Object root) {
-		this.root = root;
+		this._root = root;
+
+		if (this._root instanceof Contained) {
+			((Contained) this._root).setContainer(this);
+		}
 	}
 
 	public void setFile(File file) {
@@ -129,7 +136,7 @@ public class JsonModel extends CachedModel<Object> {
 
 	@Override
 	public boolean owns(Object instance) {
-		return instance instanceof JSONObject || instance instanceof JSONArray;
+		return instance instanceof Contained && ((Contained) instance).isContainedBy(this); 
 	}
 
 	@Override
@@ -139,13 +146,13 @@ public class JsonModel extends CachedModel<Object> {
 
 	@Override
 	public boolean hasType(String type) {
-		return JSONObject.class.getSimpleName().equals(type) || JSONArray.class.getSimpleName().equals(type);
+		return "JSONObject".equals(type) || "JSONArray".equals(type);
 	}
 
 	@Override
 	public boolean store(String location) {
 		try {
-			FileUtil.setFileContents(JSONValue.toJSONString(root), new File(location));
+			FileUtil.setFileContents(JSONValue.toJSONString(getRoot()), new File(location));
 			return true;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -163,8 +170,22 @@ public class JsonModel extends CachedModel<Object> {
 
 	@Override
 	protected Collection<Object> allContentsFromModel() {
-		// TODO Auto-generated method stub
-		return null;
+		List<Object> objects = new ArrayList<>();
+		addAllContents(getRoot(), objects);
+		return objects;
+	}
+
+	private void addAllContents(Object current, List<Object> objects) {
+		if (current instanceof JsonModelObject) {
+			objects.add(current);
+			for (Object value : ((JsonModelObject) current).values()) {
+				addAllContents(value, objects);
+			}
+		} else if (current instanceof JsonModelArray) {
+			for (Object child : (JsonModelArray) current) {
+				addAllContents(child, objects);
+			}
+		}
 	}
 
 	@Override
@@ -182,10 +203,10 @@ public class JsonModel extends CachedModel<Object> {
 	protected Object createInstanceInModel(String type)
 			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
 
-		if (JSONObject.class.getSimpleName().equals(type)) {
-			return new JSONObject();
-		} else if (JSONArray.class.getSimpleName().equals(type)) {
-			return new JSONArray();
+		if ("JSONObject".equals(type)) {
+			return new JsonModelObject();
+		} else if ("JSONArray".equals(type)) {
+			return new JsonModelArray();
 		}
 		throw new EolModelElementTypeNotFoundException(this.getName(), type);
 	}
@@ -232,11 +253,11 @@ public class JsonModel extends CachedModel<Object> {
 					HttpEntity responseEntity = httpResponse.getEntity();
 
 					Reader reader = new InputStreamReader(responseEntity.getContent(), StandardCharsets.UTF_8);
-					root = JSONValue.parse(reader);
+					setRoot(deepCloneJSON(JSONValue.parse(reader)));
 				}
 			} else if (file != null) {
 				try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
-					root = JSONValue.parse(reader);
+					setRoot(deepCloneJSON(JSONValue.parse(reader)));
 				}
 			} else {
 				throw new IllegalStateException("Neither URI nor file path have been set");
@@ -246,9 +267,28 @@ public class JsonModel extends CachedModel<Object> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public Object deepCloneJSON(Object parsed) {
+		if (parsed instanceof Map) {
+			JsonModelObject obj = new JsonModelObject();
+			for (Entry<String, Object> e : ((Map<String, Object>) parsed).entrySet()) {
+				obj.put(e.getKey(), deepCloneJSON(e.getValue()));
+			}
+			return obj;
+		} else if (parsed instanceof Iterable) {
+			JsonModelArray arr = new JsonModelArray();
+			for (Object e : (Iterable<Object>) parsed) {
+				arr.add(deepCloneJSON(e));
+			}
+			return arr;
+		} else {
+			return parsed;
+		}
+	}
+
 	@Override
 	protected void disposeModel() {
-		root = null;
+		setRoot(null);
 	}
 
 	@Override
@@ -267,6 +307,6 @@ public class JsonModel extends CachedModel<Object> {
 	}
 
 	public boolean isLoaded() {
-		return root != null;
+		return getRoot() != null;
 	}
 }

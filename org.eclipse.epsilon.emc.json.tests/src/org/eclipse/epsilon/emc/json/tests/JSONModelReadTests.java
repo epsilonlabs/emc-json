@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import org.eclipse.epsilon.emc.json.Contained;
 import org.eclipse.epsilon.emc.json.JsonModel;
 import org.eclipse.epsilon.eol.EolEvaluator;
 import org.eclipse.epsilon.eol.types.EolSequence;
@@ -27,6 +28,12 @@ public class JSONModelReadTests {
 		assertFalse(model.isLoaded());
 		model.load();
 		assertTrue(model.isLoaded());
+
+		for (Object o : model.allContents()) {
+			if (o instanceof Contained) {
+				((Contained) o).isContainedBy(model);
+			}
+		}
 
 		evaluator = new EolEvaluator(model);
 	}

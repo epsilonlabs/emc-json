@@ -14,7 +14,6 @@ package org.eclipse.epsilon.emc.json;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
 import org.eclipse.epsilon.eol.execute.context.IEolContext;
 import org.eclipse.epsilon.eol.execute.introspection.java.JavaPropertyGetter;
-import org.json.simple.JSONObject;
 
 public class JsonPropertyGetter extends JavaPropertyGetter {
 
@@ -36,7 +35,7 @@ public class JsonPropertyGetter extends JavaPropertyGetter {
 
 	@Override
 	public Object invoke(Object object, String property, IEolContext context) throws EolRuntimeException {
-		JSONObject jsonObject = (JSONObject) object;
+		JsonModelObject jsonObject = (JsonModelObject) object;
 
 		if (jsonObject.containsKey(property)) {
 			return jsonObject.get(property);
