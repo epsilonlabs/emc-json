@@ -31,7 +31,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.epsilon.common.util.FileUtil;
 import org.eclipse.epsilon.common.util.StringProperties;
-import org.eclipse.epsilon.emc.plainxml.PlainXmlModel;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
 import org.eclipse.epsilon.eol.exceptions.models.EolEnumerationValueNotFoundException;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelElementTypeNotFoundException;
@@ -52,8 +51,10 @@ public class JsonModel extends CachedModel<Object> {
 
 	protected File file;
 	protected String uri;
+
 	protected String username;
 	protected String password;
+
 	protected Object root;
 
 	public JsonModel() {
@@ -192,7 +193,7 @@ public class JsonModel extends CachedModel<Object> {
 	public void load(StringProperties properties, IRelativePathResolver resolver) throws EolModelLoadingException {
 		super.load(properties, resolver);
 
-		String filePath = properties.getProperty(PlainXmlModel.PROPERTY_FILE);
+		String filePath = properties.getProperty(JsonModel.PROPERTY_FILE);
 
 		if (filePath != null && filePath.trim().length() > 0) {
 			file = new File(resolver.resolve(filePath));
