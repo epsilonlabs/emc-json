@@ -17,8 +17,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -59,6 +59,7 @@ public class JsonModel extends CachedModel<Object> {
 
 	public JsonModel() {
 		propertyGetter = new JsonPropertyGetter();
+		propertySetter = new JsonPropertySetter();
 	}
 
 	public Object getRoot() {
@@ -257,12 +258,12 @@ public class JsonModel extends CachedModel<Object> {
 
 	@Override
 	protected Object getCacheKeyForType(String type) throws EolModelElementTypeNotFoundException {
-		return null;
+		return type;
 	}
 
 	@Override
 	protected Collection<String> getAllTypeNamesOf(Object instance) {
-		return Arrays.asList(instance.getClass().getSimpleName());
+		return Collections.singleton(instance.getClass().getSimpleName());
 	}
 
 	public boolean isLoaded() {

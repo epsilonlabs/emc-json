@@ -23,7 +23,10 @@ public class JSONModelReadTests {
 		model.setName("M");
 		model.setReadOnLoad(true);
 		model.setFile(new File("resources/commits.json"));
+
+		assertFalse(model.isLoaded());
 		model.load();
+		assertTrue(model.isLoaded());
 
 		evaluator = new EolEvaluator(model);
 	}
