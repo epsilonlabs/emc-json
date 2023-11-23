@@ -2,10 +2,12 @@ package org.eclipse.epsilon.emc.json;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 
@@ -14,17 +16,12 @@ import org.json.simple.JSONArray;
  */
 public class JsonModelArray implements List<Object>, Contained {
 
+	private Set<Object> containers = Collections.newSetFromMap(new IdentityHashMap<>());
 	private JSONArray array = new JSONArray();
-	private Object container;
 
 	@Override
-	public Object getContainer() {
-		return container;
-	}
-
-	@Override
-	public void setContainer(Object container) {
-		this.container = container;
+	public Set<Object> getContainers() {
+		return containers;
 	}
 
 	@Override
@@ -64,7 +61,7 @@ public class JsonModelArray implements List<Object>, Contained {
 	public boolean add(Object e) {
 		boolean ret = array.add(e);
 		if (ret && e instanceof Contained) {
-			((Contained) e).setContainer(this);
+			((Contained) e).addContainer(this);
 		}
 		return ret;
 	}
@@ -73,7 +70,7 @@ public class JsonModelArray implements List<Object>, Contained {
 	public boolean remove(Object o) {
 		boolean ret = array.remove(o);
 		if (ret && o instanceof Contained) {
-			((Contained) o).setContainer(null);
+			((Contained) o).removeContainer(this);
 		}
 		return ret;
 	}
@@ -98,7 +95,7 @@ public class JsonModelArray implements List<Object>, Contained {
 	public boolean addAll(int index, Collection<? extends Object> c) {
 		for (Object o : c) {
 			if (o instanceof Contained) {
-				((Contained) o).setContainer(this);
+				((Contained) o).addContainer(this);
 			}
 		}
 		return array.addAll(index, c);
@@ -111,7 +108,7 @@ public class JsonModelArray implements List<Object>, Contained {
 			if (array.remove(o)) {
 				anyRemoved = true;
 				if (o instanceof Contained) {
-					((Contained) o).setContainer(null);
+					((Contained) o).removeContainer(this);
 				}
 			}
 		}
@@ -129,7 +126,7 @@ public class JsonModelArray implements List<Object>, Contained {
 				anyRemoved = true;
 
 				if (o instanceof Contained) {
-					((Contained) o).setContainer(null);
+					((Contained) o).removeContainer(this);
 				}
 			}
 		}
@@ -141,7 +138,7 @@ public class JsonModelArray implements List<Object>, Contained {
 	public void clear() {
 		for (Object o : array) {
 			if (o instanceof Contained) {
-				((Contained) o).setContainer(null);
+				((Contained) o).removeContainer(this);
 			}
 		}
 		array.clear();
@@ -157,10 +154,10 @@ public class JsonModelArray implements List<Object>, Contained {
 	public Object set(int index, Object newValue) {
 		final Object oldValue = array.set(index, newValue);
 		if (oldValue instanceof Contained) {
-			((Contained) oldValue).setContainer(null);
+			((Contained) oldValue).removeContainer(this);
 		}
 		if (newValue instanceof Contained) {
-			((Contained) newValue).setContainer(this);
+			((Contained) newValue).addContainer(this);
 		}
 		return oldValue;
 	}
@@ -169,7 +166,7 @@ public class JsonModelArray implements List<Object>, Contained {
 	@Override
 	public void add(int index, Object element) {
 		if (element instanceof Contained) {
-			((Contained) element).setContainer(this);
+			((Contained) element).addContainer(this);
 		}
 		array.add(index, element);
 	}
@@ -178,7 +175,7 @@ public class JsonModelArray implements List<Object>, Contained {
 	public Object remove(int index) {
 		final Object removed = array.remove(index);
 		if (removed instanceof Contained) {
-			((Contained) removed).setContainer(null);
+			((Contained) removed).removeContainer(this);
 		}
 		return removed;
 	}
@@ -228,7 +225,7 @@ public class JsonModelArray implements List<Object>, Contained {
 
 	@Override
 	public String toString() {
-		return "JsonModelArray [array=" + array + ", container=" + container + "]";
+		return "JsonModelArray [array=" + array + ", containers=" + containers + "]";
 	}
 	
 }

@@ -70,10 +70,19 @@ public class JsonModel extends CachedModel<Object> {
 	}
 
 	public void setRoot(Object root) {
+		if (this._root == root) {
+			// This is already the root: do nothing
+			return;
+		}
+		
+		if (this._root instanceof Contained) {
+			((Contained) this._root).removeContainer(this);
+		}
+
 		this._root = root;
 
 		if (this._root instanceof Contained) {
-			((Contained) this._root).setContainer(this);
+			((Contained) this._root).addContainer(this);
 		}
 	}
 
@@ -253,11 +262,11 @@ public class JsonModel extends CachedModel<Object> {
 					HttpEntity responseEntity = httpResponse.getEntity();
 
 					Reader reader = new InputStreamReader(responseEntity.getContent(), StandardCharsets.UTF_8);
-					setRoot(deepCloneJSON(JSONValue.parse(reader)));
+					setRoot(deepClone(JSONValue.parse(reader)));
 				}
 			} else if (file != null) {
 				try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
-					setRoot(deepCloneJSON(JSONValue.parse(reader)));
+					setRoot(deepClone(JSONValue.parse(reader)));
 				}
 			} else {
 				throw new IllegalStateException("Neither URI nor file path have been set");
@@ -268,17 +277,17 @@ public class JsonModel extends CachedModel<Object> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Object deepCloneJSON(Object parsed) {
+	public static Object deepClone(Object parsed) {
 		if (parsed instanceof Map) {
 			JsonModelObject obj = new JsonModelObject();
 			for (Entry<String, Object> e : ((Map<String, Object>) parsed).entrySet()) {
-				obj.put(e.getKey(), deepCloneJSON(e.getValue()));
+				obj.put(e.getKey(), deepClone(e.getValue()));
 			}
 			return obj;
 		} else if (parsed instanceof Iterable) {
 			JsonModelArray arr = new JsonModelArray();
 			for (Object e : (Iterable<Object>) parsed) {
-				arr.add(deepCloneJSON(e));
+				arr.add(deepClone(e));
 			}
 			return arr;
 		} else {

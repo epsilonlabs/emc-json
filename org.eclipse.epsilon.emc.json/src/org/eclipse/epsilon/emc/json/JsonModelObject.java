@@ -2,6 +2,7 @@ package org.eclipse.epsilon.emc.json;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -13,18 +14,14 @@ import org.json.simple.JSONObject;
  * values.
  */
 public class JsonModelObject implements Contained, Map<String, Object> {
+	private Set<Object> containers = Collections.newSetFromMap(new IdentityHashMap<>());
+
 	// Underlying map is the same, but we can intercept all calls
 	private JSONObject object = new JSONObject();
-	private Object container;
 
 	@Override
-	public Object getContainer() {
-		return container;
-	}
-
-	@Override
-	public void setContainer(Object container) {
-		this.container = container;
+	public Set<Object> getContainers() {
+		return containers;
 	}
 
 	@Override
@@ -58,10 +55,10 @@ public class JsonModelObject implements Contained, Map<String, Object> {
 		Object ret = object.put(key, value);
 
 		if (value instanceof Contained) {
-			((Contained) value).setContainer(this);
+			((Contained) value).addContainer(this);
 		}
 		if (ret instanceof Contained) {
-			((Contained) ret).setContainer(null);
+			((Contained) ret).removeContainer(this);
 		}
 
 		return ret;
@@ -71,7 +68,7 @@ public class JsonModelObject implements Contained, Map<String, Object> {
 	public Object remove(Object key) {
 		Object ret = object.remove(key);
 		if (ret instanceof Contained) {
-			((Contained) ret).setContainer(null);
+			((Contained) ret).removeContainer(this);
 		}
 		return ret;
 	}
@@ -87,7 +84,7 @@ public class JsonModelObject implements Contained, Map<String, Object> {
 	public void clear() {
 		for (Object e : object.values()) {
 			if (e instanceof Contained) {
-				((Contained) e).setContainer(null);
+				((Contained) e).removeContainer(this);
 			}
 		}
 		object.clear();
@@ -128,7 +125,7 @@ public class JsonModelObject implements Contained, Map<String, Object> {
 
 	@Override
 	public String toString() {
-		return "JsonModelObject [object=" + object + ", container=" + container + "]";
+		return "JsonModelObject [object=" + object + ", containers=" + containers + "]";
 	}
 
 }

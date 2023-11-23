@@ -2,7 +2,6 @@ package org.eclipse.epsilon.emc.json.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -33,17 +32,24 @@ public class JSONContainmentTests {
 
 	@Test
 	public void objectsHaveNoContainerByDefault() {
-		assertNull(parentObject.getContainer());
+		assertTrue(parentObject.getContainers().isEmpty());
 	}
 
 	@Test
 	public void arraysHaveNoContainerByDefault() {
-		assertNull(parentArray.getContainer());
+		assertTrue(parentArray.getContainers().isEmpty());
+	}
+
+	@Test
+	public void objectDoesNotContainItself() {
+		assertFalse(child.isContainedBy(child));
 	}
 
 	@Test
 	public void objectsAsRoot() {
 		JsonModel model = new JsonModel();
+	
+		assertFalse(parentObject.isContainedBy(model));
 		model.setRoot(parentObject);
 		assertTrue(parentObject.isContainedBy(model));
 	}
@@ -177,5 +183,33 @@ public class JSONContainmentTests {
 
 		assertTrue(parentArray.isEmpty());
 		assertFalse(child.isContainedBy(parentArray));
+	}
+
+	@Test
+	public void objectReuse() {
+		JsonModelObject parentObject2 = new JsonModelObject();
+
+		parentObject.put("x", child);
+		parentObject2.put("x", child);
+
+		assertTrue(child.isContainedBy(parentObject));
+		assertTrue(child.isContainedBy(parentObject2));
+
+		parentObject.remove("x");
+		assertFalse(child.isContainedBy(parentObject));
+
+		parentObject2.clear();
+		assertFalse(child.isContainedBy(parentObject2));
+	}
+
+	@Test
+	public void objectDeepClone() {
+		JsonModelObject parentObject2 = new JsonModelObject();
+
+		parentObject.put("x", child);
+		parentObject2.put("x", JsonModel.deepClone(child));
+
+		assertTrue(child.isContainedBy(parentObject));
+		assertFalse(child.isContainedBy(parentObject2));
 	}
 }

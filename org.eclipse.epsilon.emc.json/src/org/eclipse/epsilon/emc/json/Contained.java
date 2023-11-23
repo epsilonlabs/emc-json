@@ -1,19 +1,29 @@
 package org.eclipse.epsilon.emc.json;
 
+import java.util.Set;
+
 /**
  * Interface for something that has a container.
  */
 public interface Contained {
 
-	Object getContainer();
-	void setContainer(Object container);
+	Set<Object> getContainers();
+
+	default boolean addContainer(Object container) {
+		return getContainers().add(container);
+	}
+
+	default Object removeContainer(Object container) {
+		return getContainers().remove(container);
+	}
 
 	default boolean isContainedBy(Object element) {
-		for (Object ancestor = this;
-			ancestor != null;
-			ancestor = ancestor instanceof Contained ? ((Contained) ancestor).getContainer() : null
-		) {
-			if (ancestor == element) {
+		for (Object container : getContainers()) {
+			if (container == element) {
+				// May not be a Contained (e.g. a JsonModel)
+				return true;
+			}
+			if (container instanceof Contained && ((Contained) container).isContainedBy(element)) {
 				return true;
 			}
 		}
