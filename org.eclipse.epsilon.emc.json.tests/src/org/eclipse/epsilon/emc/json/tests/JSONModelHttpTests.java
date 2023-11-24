@@ -200,6 +200,38 @@ public class JSONModelHttpTests {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	@Test
+	public void followsRedirects() throws Exception {
+		JSONObject root = new JSONObject();
+		root.put("hello", "world");
+
+		serve(new AbstractHandler() {
+			@Override
+			public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+				baseRequest.setHandled(true);
+				if ("/model".equals(target)) {
+					response.getWriter().print(JSONValue.toJSONString(root));
+				} else if ("/".equals(target)) {
+					response.setStatus(HttpStatus.TEMPORARY_REDIRECT_307);
+					response.setHeader(HttpHeader.LOCATION.name(), serverUri + "/model");
+				} else {
+					response.setStatus(HttpStatus.NOT_FOUND_404);
+				}
+			}
+		});
+
+		try (JsonModel model = new JsonModel()) {
+			model.setName("M");
+			model.setUri(serverUri);
+			model.setReadOnLoad(true);
+			model.setStoredOnDisposal(false);
+			model.load();
+
+			assertEquals(root, model.getRoot());
+		}
+	}
+
 	private void serve(Handler handler) throws Exception {
 		server.setHandler(handler);
 		server.start();
