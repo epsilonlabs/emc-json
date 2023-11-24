@@ -13,6 +13,8 @@ package org.eclipse.epsilon.emc.json;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
@@ -20,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,6 +33,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -56,11 +60,15 @@ public class JsonModel extends CachedModel<Object> {
 	public static final String PROPERTY_USERNAME = "username";
 	public static final String PROPERTY_PASSWORD = "password";
 
+	/* We use header0, header1, and so on to represent the values of various HTTP headers. */
+	public static final String PROPERTY_PREFIX_HEADER = "header";
+
 	protected File file;
 	protected String uri;
 
 	protected String username;
 	protected String password;
+	protected Map<String, String> headers = new HashMap<>();
 
 	/* ONLY SET THIS FIELD VIA setRoot() */
 	protected Object _root;
@@ -255,6 +263,22 @@ public class JsonModel extends CachedModel<Object> {
 			uri = properties.getProperty(JsonModel.PROPERTY_URI);
 			username = properties.getProperty(JsonModel.PROPERTY_USERNAME);
 			password = properties.getProperty(JsonModel.PROPERTY_PASSWORD);
+
+			for (Entry<Object, Object> e : properties.entrySet()) {
+				if (e.getKey().toString().startsWith(PROPERTY_PREFIX_HEADER)) {
+					String nameValue = e.getValue().toString();
+
+					int firstColon = nameValue.indexOf(':');
+					if (firstColon == -1) {
+						throw new IllegalArgumentException("Could not find ':' in value of header property " + e.getKey());
+					}
+
+					String name = nameValue.substring(0, firstColon).trim();
+					String value = nameValue.substring(firstColon + 1).trim();
+					headers.put(name, value);
+				}
+				
+			}
 		}
 
 		load();
@@ -269,30 +293,13 @@ public class JsonModel extends CachedModel<Object> {
 			if (uri != null) {
 				URI parsedUri = new URI(uri);
 
-				HttpClientBuilder builder = HttpClients.custom();
-				if (username != null) {
-					BasicCredentialsProvider creds = new BasicCredentialsProvider();
-					creds.setCredentials(new AuthScope(parsedUri.getHost(), parsedUri.getPort()),
-							new UsernamePasswordCredentials(username, password));
-
-					builder.setDefaultCredentialsProvider(creds);
-				}
-
-				try (CloseableHttpClient httpClient = builder.build()) {
-					HttpGet httpGet = new HttpGet(uri);
-					HttpResponse httpResponse = httpClient.execute(httpGet);
-
-					if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-						throw new EolRuntimeException(
-							String.format("HTTP request to %s returned a non-200 status code: %d",
-									uri,
-									httpResponse.getStatusLine().getStatusCode()));
+				if ("http".equals(parsedUri.getScheme()) || "https".equals(parsedUri.getScheme())) {
+					loadModelViaHTTP(parsedUri);
+				} else {
+					// Not HTTP, so we'll rely on Java's standard URL handling (covers file:// and jar:// by default) 
+					try (InputStream is = parsedUri.toURL().openStream(); Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+						setRoot(deepClone(JSONValue.parse(reader)));
 					}
-					
-					HttpEntity responseEntity = httpResponse.getEntity();
-
-					Reader reader = new InputStreamReader(responseEntity.getContent(), StandardCharsets.UTF_8);
-					setRoot(deepClone(JSONValue.parse(reader)));
 				}
 			} else if (file != null) {
 				try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
@@ -303,6 +310,38 @@ public class JsonModel extends CachedModel<Object> {
 			}
 		} catch (Exception ex) {
 			throw new EolModelLoadingException(ex, this);
+		}
+	}
+
+	private void loadModelViaHTTP(URI parsedUri) throws IOException, ClientProtocolException, EolRuntimeException {
+		HttpClientBuilder builder = HttpClients.custom();
+		if (username != null) {
+			BasicCredentialsProvider creds = new BasicCredentialsProvider();
+			creds.setCredentials(new AuthScope(parsedUri.getHost(), parsedUri.getPort()),
+					new UsernamePasswordCredentials(username, password));
+
+			builder.setDefaultCredentialsProvider(creds);
+		}
+
+		try (CloseableHttpClient httpClient = builder.build()) {
+			HttpGet httpGet = new HttpGet(uri);
+			for (Entry<String, String> e : headers.entrySet()) {
+				httpGet.setHeader(e.getKey(), e.getValue());
+			}
+
+			HttpResponse httpResponse = httpClient.execute(httpGet);
+
+			if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+				throw new EolRuntimeException(
+					String.format("HTTP request to %s returned a non-200 status code: %d",
+							uri,
+							httpResponse.getStatusLine().getStatusCode()));
+			}
+
+			HttpEntity responseEntity = httpResponse.getEntity();
+
+			Reader reader = new InputStreamReader(responseEntity.getContent(), StandardCharsets.UTF_8);
+			setRoot(deepClone(JSONValue.parse(reader)));
 		}
 	}
 
@@ -345,7 +384,16 @@ public class JsonModel extends CachedModel<Object> {
 		return Collections.singleton(getTypeNameOf(instance));
 	}
 
+	@Override
 	public boolean isLoaded() {
 		return getRoot() != null;
+	}
+
+	public String getHeader(String name) {
+		return headers.get(name);
+	}
+
+	public void setHeader(String name, String value) {
+		headers.put(name, value);
 	}
 }

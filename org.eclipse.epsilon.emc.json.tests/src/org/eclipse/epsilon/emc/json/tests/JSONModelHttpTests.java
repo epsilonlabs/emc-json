@@ -232,6 +232,75 @@ public class JSONModelHttpTests {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	@Test
+	public void usesHeaders() throws Exception {
+		JSONObject root = new JSONObject();
+		root.put("hello", "world");
+
+		final String authValue = "Bearer TOKEN";
+		serve(new AbstractHandler() {
+			@Override
+			public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+				baseRequest.setHandled(true);
+				if (!authValue.equals(baseRequest.getHeader(HttpHeader.AUTHORIZATION.name()))) {
+					response.setStatus(HttpStatus.FORBIDDEN_403);
+				} else {
+					response.getWriter().print(JSONValue.toJSONString(root));
+				}
+			}
+		});
+
+		try (JsonModel model = new JsonModel()) {
+			model.setName("M");
+			model.setUri(serverUri);
+			model.setReadOnLoad(true);
+			model.setStoredOnDisposal(false);
+			model.setHeader(HttpHeader.AUTHORIZATION.name(), authValue);
+			model.load();
+
+			assertEquals(root, model.getRoot());
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void usesHeadersThroughProperties() throws Exception {
+		JSONObject root = new JSONObject();
+		root.put("hello", "world");
+
+		final String authValue = "Bearer TOKEN";
+		final String expectedMimeType = "application/vnd.github+json";
+		serve(new AbstractHandler() {
+			@Override
+			public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+				baseRequest.setHandled(true);
+				if (!authValue.equals(baseRequest.getHeader(HttpHeader.AUTHORIZATION.name()))) {
+					response.setStatus(HttpStatus.FORBIDDEN_403);
+				} else if (!expectedMimeType.equals(baseRequest.getHeader(HttpHeader.ACCEPT.name()))) {
+					response.setStatus(HttpStatus.BAD_REQUEST_400);
+				} else {
+					response.getWriter().print(JSONValue.toJSONString(root));
+				}
+			}
+		});
+
+		try (JsonModel model = new JsonModel()) {
+			model.setName("M");
+
+			StringProperties props = new StringProperties();
+			props.put(JsonModel.PROPERTY_URI, serverUri);
+			props.put(JsonModel.PROPERTY_READONLOAD, "true");
+			props.put(JsonModel.PROPERTY_STOREONDISPOSAL, "false");
+			props.put(JsonModel.PROPERTY_PREFIX_HEADER + "0", "Authorization: " + authValue);
+			props.put(JsonModel.PROPERTY_PREFIX_HEADER + "1", "Accept: " + expectedMimeType);
+
+			model.load(props);
+
+			assertEquals(root, model.getRoot());
+		}
+	}
+
 	private void serve(Handler handler) throws Exception {
 		server.setHandler(handler);
 		server.start();
