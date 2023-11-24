@@ -71,6 +71,17 @@ public class JSONContainmentTests {
 	}
 
 	@Test
+	public void objectPutOverwrite() {
+		parentObject.put("x", child);
+
+		JsonModelObject child2 = new JsonModelObject();
+		parentObject.put("x", child2);
+
+		assertTrue(child2.isContainedBy(parentObject));
+		assertFalse(child.isContainedBy(parentObject));
+	}
+
+	@Test
 	public void objectClear() {
 		parentObject.put("x", child);
 		parentObject.clear();
