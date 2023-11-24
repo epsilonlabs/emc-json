@@ -92,7 +92,22 @@ public class JSONModelReadTests {
 		assertTrue(model.hasType(JsonModel.JSON_ARRAY_TYPE));
 		assertEquals(JsonModel.JSON_ARRAY_TYPE, model.getTypeNameOf(new JsonModelArray()));
 	}
-	
+
+	@Test
+	public void allObjects() {
+		assertEquals(7, evaluator.evaluate("M!JSONObject.all.size()"));
+	}
+
+	@Test
+	public void allArrays() {
+		assertEquals(3, evaluator.evaluate("M!JSONArray.all.size()"));
+	}
+
+	@Test
+	public void allContents() {
+		assertEquals(10, evaluator.evaluate("M.allContents.size()"));
+	}
+
 	@SafeVarargs
 	protected final <T> EolSequence<T> sequence(T... values) {
 		EolSequence<T> seq = new EolSequence<>();

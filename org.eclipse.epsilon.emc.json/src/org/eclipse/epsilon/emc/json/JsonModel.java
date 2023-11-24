@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -190,27 +191,40 @@ public class JsonModel extends CachedModel<Object> {
 	@Override
 	protected Collection<Object> allContentsFromModel() {
 		List<Object> objects = new ArrayList<>();
-		addAllContents(getRoot(), objects);
+		addAllContents(getRoot(), objects,
+			(o) -> o instanceof JsonModelObject || o instanceof JsonModelArray);
 		return objects;
 	}
 
-	private void addAllContents(Object current, List<Object> objects) {
-		if (current instanceof JsonModelObject) {
+	private void addAllContents(Object current, List<Object> objects, Predicate<Object> addFilter) {
+		if (addFilter.test(current)) {
 			objects.add(current);
+		}
+
+		if (current instanceof JsonModelObject) {
 			for (Object value : ((JsonModelObject) current).values()) {
-				addAllContents(value, objects);
+				addAllContents(value, objects, addFilter);
 			}
 		} else if (current instanceof JsonModelArray) {
 			for (Object child : (JsonModelArray) current) {
-				addAllContents(child, objects);
+				addAllContents(child, objects, addFilter);
 			}
 		}
 	}
 
 	@Override
 	protected Collection<Object> getAllOfTypeFromModel(String type) throws EolModelElementTypeNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
+		List<Object> objects = new ArrayList<>();
+
+		if (JSON_OBJECT_TYPE.equals(type)) {
+			addAllContents(getRoot(), objects, o -> o instanceof JsonModelObject);
+		} else if (JSON_ARRAY_TYPE.equals(type)) {
+			addAllContents(getRoot(), objects, o -> o instanceof JsonModelArray);
+		} else {
+			throw new EolModelElementTypeNotFoundException(getName(), type);
+		}
+
+		return objects;
 	}
 
 	@Override
