@@ -47,6 +47,9 @@ import org.json.simple.JSONValue;
 
 public class JsonModel extends CachedModel<Object> {
 
+	public static final String JSON_ARRAY_TYPE = "JSONArray";
+	public static final String JSON_OBJECT_TYPE = "JSONObject";
+
 	public static final String PROPERTY_FILE = "file";
 	public static final String PROPERTY_URI = "uri";
 	public static final String PROPERTY_USERNAME = "username";
@@ -126,7 +129,13 @@ public class JsonModel extends CachedModel<Object> {
 
 	@Override
 	public String getTypeNameOf(Object instance) {
-		return instance.getClass().getSimpleName();
+		if (instance instanceof JsonModelObject) {
+			return JSON_OBJECT_TYPE;
+		} else if (instance instanceof JsonModelArray) {
+			return JSON_ARRAY_TYPE;
+		} else {
+			return instance.getClass().getSimpleName();
+		}
 	}
 
 	@Override
@@ -156,7 +165,7 @@ public class JsonModel extends CachedModel<Object> {
 
 	@Override
 	public boolean hasType(String type) {
-		return "JSONObject".equals(type) || "JSONArray".equals(type);
+		return JSON_OBJECT_TYPE.equals(type) || JSON_ARRAY_TYPE.equals(type);
 	}
 
 	@Override
@@ -210,14 +219,13 @@ public class JsonModel extends CachedModel<Object> {
 	}
 
 	@Override
-	protected Object createInstanceInModel(String type)
-			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
-
-		if ("JSONObject".equals(type)) {
+	protected Object createInstanceInModel(String type) throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
+		if (JSON_OBJECT_TYPE.equals(type)) {
 			return new JsonModelObject();
-		} else if ("JSONArray".equals(type)) {
+		} else if (JSON_ARRAY_TYPE.equals(type)) {
 			return new JsonModelArray();
 		}
+
 		throw new EolModelElementTypeNotFoundException(this.getName(), type);
 	}
 
@@ -320,7 +328,7 @@ public class JsonModel extends CachedModel<Object> {
 
 	@Override
 	protected Collection<String> getAllTypeNamesOf(Object instance) {
-		return Collections.singleton(instance.getClass().getSimpleName());
+		return Collections.singleton(getTypeNameOf(instance));
 	}
 
 	public boolean isLoaded() {

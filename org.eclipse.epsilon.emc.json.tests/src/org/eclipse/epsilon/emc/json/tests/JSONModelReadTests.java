@@ -8,6 +8,8 @@ import java.io.File;
 
 import org.eclipse.epsilon.emc.json.Contained;
 import org.eclipse.epsilon.emc.json.JsonModel;
+import org.eclipse.epsilon.emc.json.JsonModelArray;
+import org.eclipse.epsilon.emc.json.JsonModelObject;
 import org.eclipse.epsilon.eol.EolEvaluator;
 import org.eclipse.epsilon.eol.types.EolSequence;
 import org.junit.Before;
@@ -79,6 +81,18 @@ public class JSONModelReadTests {
 		assertFalse((Boolean) evaluator.evaluate("M.root.p_nonExisting.isDefined()"));
 	}
 
+	@Test
+	public void typeNameOfObject() {
+		assertTrue(model.hasType(JsonModel.JSON_OBJECT_TYPE));
+		assertEquals(JsonModel.JSON_OBJECT_TYPE, model.getTypeNameOf(new JsonModelObject()));
+	}
+
+	@Test
+	public void typeNameOfArray() {
+		assertTrue(model.hasType(JsonModel.JSON_ARRAY_TYPE));
+		assertEquals(JsonModel.JSON_ARRAY_TYPE, model.getTypeNameOf(new JsonModelArray()));
+	}
+	
 	@SafeVarargs
 	protected final <T> EolSequence<T> sequence(T... values) {
 		EolSequence<T> seq = new EolSequence<>();
