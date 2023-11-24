@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpGet;
@@ -257,8 +258,15 @@ public class JsonModel extends CachedModel<Object> {
 
 				try (CloseableHttpClient httpClient = builder.build()) {
 					HttpGet httpGet = new HttpGet(uri);
-
 					HttpResponse httpResponse = httpClient.execute(httpGet);
+
+					if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+						throw new EolRuntimeException(
+							String.format("HTTP request to %s returned a non-200 status code: %d",
+									uri,
+									httpResponse.getStatusLine().getStatusCode()));
+					}
+					
 					HttpEntity responseEntity = httpResponse.getEntity();
 
 					Reader reader = new InputStreamReader(responseEntity.getContent(), StandardCharsets.UTF_8);
