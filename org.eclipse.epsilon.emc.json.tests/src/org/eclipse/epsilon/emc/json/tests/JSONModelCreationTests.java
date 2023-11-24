@@ -17,7 +17,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class JSONModelWriteTests {
+public class JSONModelCreationTests {
 
 	private static final String TEST_BASE_FOLDER = "resources/writeTests";
 
@@ -45,13 +45,13 @@ public class JSONModelWriteTests {
 	private File eolFile;
 	private File expectedJsonFile;
 
-	public JSONModelWriteTests(File eolFile, File expectedJsonFile) {
+	public JSONModelCreationTests(File eolFile, File expectedJsonFile) {
 		this.eolFile = eolFile;
 		this.expectedJsonFile = expectedJsonFile;
 	}
 
 	@Test
-	public void createAuthor() throws Exception {
+	public void runTest() throws Exception {
 		JsonModel model = new JsonModel();
 		model.setName("M");
 		model.setReadOnLoad(false);
