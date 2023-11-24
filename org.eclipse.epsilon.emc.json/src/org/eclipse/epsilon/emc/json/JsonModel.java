@@ -7,7 +7,7 @@
  * 
  * Contributors:
  *     Sina Madani - initial API and implementation
- *     Antonio Garcia-Dominguez - complete implementation and add tests/docs
+ *     Antonio Garcia-Dominguez - complete implementation
  ******************************************************************************/
 package org.eclipse.epsilon.emc.json;
 
