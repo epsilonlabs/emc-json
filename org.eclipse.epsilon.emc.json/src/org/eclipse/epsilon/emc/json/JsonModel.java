@@ -396,4 +396,10 @@ public class JsonModel extends CachedModel<Object> {
 	public void setHeader(String name, String value) {
 		headers.put(name, value);
 	}
+
+	@Override
+	public String toString() {
+		return "JsonModel [name=" + name + "]";
+	}
+	
 }

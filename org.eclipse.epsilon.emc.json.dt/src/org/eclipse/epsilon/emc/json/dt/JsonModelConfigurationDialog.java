@@ -57,14 +57,18 @@ public class JsonModelConfigurationDialog extends AbstractCachedModelConfigurati
 			uriTextLabel.setEnabled(false);
 			uriText.setEnabled(false);
 			uriText.setText("");
-		}
+
+			storeOnDisposalCheckbox.setEnabled(true);
+		}		
 		else {
 			fileTextLabel.setEnabled(false);
 			fileText.setEnabled(false);
 			uriTextLabel.setEnabled(true);
 			uriText.setEnabled(true);
 			fileText.setText("");
+			
 			storeOnDisposalCheckbox.setSelection(false);
+			storeOnDisposalCheckbox.setEnabled(false);
 		}
 	}
 	
