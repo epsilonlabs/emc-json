@@ -302,8 +302,8 @@ public class JSONModelHttpTests {
 			props.put(JsonModel.PROPERTY_URI, serverUri);
 			props.put(JsonModel.PROPERTY_READONLOAD, "true");
 			props.put(JsonModel.PROPERTY_STOREONDISPOSAL, "false");
-			props.put(JsonModel.PROPERTY_PREFIX_HEADER + "0", "Authorization: " + authValue);
-			props.put(JsonModel.PROPERTY_PREFIX_HEADER + "1", "Accept: " + expectedMimeType);
+			props.put(JsonModel.PROPERTY_HEADER_PREFIX + "0", "Authorization: " + authValue);
+			props.put(JsonModel.PROPERTY_HEADER_PREFIX + "1", "Accept: " + expectedMimeType);
 
 			model.load(props);
 

@@ -61,7 +61,9 @@ public class JsonModel extends CachedModel<Object> {
 	public static final String PROPERTY_PASSWORD = "password";
 
 	/* We use header0, header1, and so on to represent the values of various HTTP headers. */
-	public static final String PROPERTY_PREFIX_HEADER = "header";
+	public static final String PROPERTY_HEADER_PREFIX = "header";
+	/* Separator used between the name and the value of the header. */
+	public static final char PROPERTY_HEADER_SEPARATOR = ':';
 
 	protected File file;
 	protected String uri;
@@ -265,12 +267,14 @@ public class JsonModel extends CachedModel<Object> {
 			password = properties.getProperty(JsonModel.PROPERTY_PASSWORD);
 
 			for (Entry<Object, Object> e : properties.entrySet()) {
-				if (e.getKey().toString().startsWith(PROPERTY_PREFIX_HEADER)) {
+				if (e.getKey().toString().startsWith(PROPERTY_HEADER_PREFIX)) {
 					String nameValue = e.getValue().toString();
 
-					int firstColon = nameValue.indexOf(':');
+					int firstColon = nameValue.indexOf(PROPERTY_HEADER_SEPARATOR);
 					if (firstColon == -1) {
-						throw new IllegalArgumentException("Could not find ':' in value of header property " + e.getKey());
+						throw new IllegalArgumentException(String.format(
+							"Could not find separator '%s' in value of header property %s",
+							PROPERTY_HEADER_SEPARATOR, e.getKey()));
 					}
 
 					String name = nameValue.substring(0, firstColon).trim();
