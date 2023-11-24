@@ -11,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.emc.json.JsonModel;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.jetty.http.HttpHeader;
@@ -116,6 +117,26 @@ public class JSONModelHttpTests {
 		}
 	}
 
+	@SuppressWarnings("unchecked") 
+	@Test
+	public void canLoadHttpWithProperties() throws Exception {
+		JSONObject root = new JSONObject();
+		root.put("hello", "world");
+		serve(new StaticJSONHandler(root));
+
+		try (JsonModel model = new JsonModel()) {
+			model.setName("M");
+
+			StringProperties props = new StringProperties();
+			props.put(JsonModel.PROPERTY_URI, serverUri);
+			props.put(JsonModel.PROPERTY_READONLOAD, "true");
+			props.put(JsonModel.PROPERTY_STOREONDISPOSAL, "false");
+			model.load(props);
+
+			assertEquals(root, model.getRoot());
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void failureToAuthenticateIsReported() throws Exception {
@@ -162,7 +183,7 @@ public class JSONModelHttpTests {
 	@Test
 	public void cannotStoreUri() throws Exception {
 		serve(new StaticJSONHandler(new JSONObject()));
-		
+
 		JsonModel model = new JsonModel();
 		model.setName("M");
 		model.setUri(serverUri);
